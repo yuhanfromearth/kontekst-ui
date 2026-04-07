@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 interface KontekstDisplayProps {
   selected?: string;
-  onSelect: (kontekst: string) => void;
+  onSelect: (kontekst: string | undefined) => void;
 }
 
 async function fetchKonteksts(): Promise<string[]> {
@@ -26,6 +26,13 @@ export default function KontekstDisplay({
 
   return (
     <div className="flex w-full mt-8 flex-wrap justify-center gap-2">
+      <Badge
+        onClick={() => onSelect(undefined)}
+        variant={selected === undefined ? "default" : "outline"}
+        className="cursor-pointer"
+      >
+        Bob (default)
+      </Badge>
       {kontekstList.map((kontekst) => (
         <Badge
           key={kontekst}
