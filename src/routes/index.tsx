@@ -6,7 +6,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import MarkdownRenderer from "#/components/MarkdownRenderer";
 
 export const Route = createFileRoute("/")({ component: App });
 
@@ -87,11 +87,7 @@ function App() {
         onSelect={setSelectedKontekst}
       />
 
-      {data && (
-        <div className="prose max-w-none max-h-96 overflow-y-auto text-justify w-full mt-16">
-          <ReactMarkdown>{data}</ReactMarkdown>
-        </div>
-      )}
+      {data && <MarkdownRenderer markdownString={data} />}
     </div>
   );
 }
