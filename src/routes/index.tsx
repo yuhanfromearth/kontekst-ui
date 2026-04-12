@@ -59,10 +59,11 @@ function App() {
 
   return (
     <div className="flex flex-col">
+      <h2 className="font-bold text-2xl mb-8 ml-2">kontekst.</h2>
       <form onSubmit={handleSubmit}>
         <Textarea
           ref={textareaRef}
-          placeholder="How can I help you?"
+          placeholder="How can I help you? [/]"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {

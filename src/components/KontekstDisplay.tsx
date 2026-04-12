@@ -16,6 +16,8 @@ async function fetchKonteksts(): Promise<string[]> {
   return res.json();
 }
 
+const MODIFIER_KEYS = new Set(["meta", "control", "shift", "alt"]);
+
 function parseShortcut(shortcut: string) {
   const tokens = shortcut.toLowerCase().split("+");
   return {
@@ -23,19 +25,8 @@ function parseShortcut(shortcut: string) {
     ctrl: tokens.includes("ctrl"),
     shift: tokens.includes("shift"),
     alt: tokens.includes("alt"),
-    key: tokens.find((t) => !["cmd", "ctrl", "shift", "alt"].includes(t)),
+    letters: tokens.filter((t) => !["cmd", "ctrl", "shift", "alt"].includes(t)),
   };
-}
-
-function matchesShortcut(e: KeyboardEvent, shortcut: string) {
-  const parsed = parseShortcut(shortcut);
-  return (
-    e.metaKey === parsed.meta &&
-    e.ctrlKey === parsed.ctrl &&
-    e.shiftKey === parsed.shift &&
-    e.altKey === parsed.alt &&
-    e.key.toLowerCase() === parsed.key
-  );
 }
 
 function ShortcutDisplay({ shortcut }: { shortcut: string }) {
@@ -72,20 +63,68 @@ export default function KontekstDisplay({
   useEffect(() => {
     if (!shortcuts) return;
 
-    const handler = (e: KeyboardEvent) => {
-      if (document.activeElement?.tagName === "TEXTAREA") return;
+    const pressedKeys = new Set<string>();
 
-      for (const [kontekst, shortcut] of Object.entries(shortcuts)) {
-        if (matchesShortcut(e, shortcut)) {
-          e.preventDefault();
-          onSelect(kontekst);
-          return;
+    const keydownHandler = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === "TEXTAREA") return;
+      if (document.activeElement?.tagName === "INPUT") return;
+
+      const key = e.key.toLowerCase();
+      if (MODIFIER_KEYS.has(key)) return;
+
+      pressedKeys.add(key);
+
+      // Cmd+key: fire immediately on keydown so we can suppress browser defaults
+      if (e.metaKey) {
+        for (const [kontekst, shortcut] of Object.entries(shortcuts)) {
+          const parsed = parseShortcut(shortcut);
+          if (
+            parsed.meta &&
+            parsed.letters.length === 1 &&
+            parsed.letters[0] === key
+          ) {
+            e.preventDefault();
+            onSelect(kontekst);
+            pressedKeys.clear();
+            return;
+          }
         }
       }
     };
 
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
+    const keyupHandler = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === "TEXTAREA") return;
+      if (document.activeElement?.tagName === "INPUT") return;
+
+      const key = e.key.toLowerCase();
+      if (MODIFIER_KEYS.has(key)) return;
+
+      // Non-cmd shortcuts: fire on keyup so the full pressed-key set is known.
+      // pressedKeys still contains the releasing key at this point.
+      if (!e.metaKey) {
+        for (const [kontekst, shortcut] of Object.entries(shortcuts)) {
+          const parsed = parseShortcut(shortcut);
+          if (parsed.meta) continue;
+          if (
+            parsed.letters.length === pressedKeys.size &&
+            parsed.letters.every((l) => pressedKeys.has(l))
+          ) {
+            onSelect(kontekst);
+            pressedKeys.clear();
+            return;
+          }
+        }
+      }
+
+      pressedKeys.delete(key);
+    };
+
+    document.addEventListener("keydown", keydownHandler);
+    document.addEventListener("keyup", keyupHandler);
+    return () => {
+      document.removeEventListener("keydown", keydownHandler);
+      document.removeEventListener("keyup", keyupHandler);
+    };
   }, [shortcuts, onSelect, selected]);
 
   if (isError) return <p>Something went wrong.</p>;

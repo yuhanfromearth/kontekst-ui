@@ -12,15 +12,17 @@ import { Label } from "#/components/ui/label";
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Button } from "#/components/ui/button";
+import { ShortcutCaptureInput } from "#/components/ShortcutCaptureInput";
+import {
+  isValidShortcut,
+  SHORTCUT_HINT,
+  SHORTCUT_VALIDATION_ERROR,
+} from "#/lib/shortcut";
+import type { KontekstDto } from "#/types/kontekst";
 
 export const Route = createFileRoute("/kontekst/$name")({
   component: KontekstEditPage,
 });
-
-interface KontekstDto {
-  kontekst: string | undefined;
-  shortcut: string | undefined;
-}
 
 function KontekstEditPage() {
   const { name } = Route.useParams();
@@ -37,6 +39,8 @@ function KontekstEditPage() {
   const [editableName, setEditableName] = useState(name);
   const [kontekst, setKontekst] = useState("");
   const [shortcut, setShortcut] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [contentError, setContentError] = useState<string | null>(null);
   const [shortcutError, setShortcutError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const deleteRef = useRef<HTMLDivElement>(null);
@@ -63,9 +67,31 @@ function KontekstEditPage() {
 
   const isNew = data?.kontekst === undefined;
 
-  const { mutate: save, isPending } = useMutation({
+  const {
+    mutate: saveKontekst,
+    isPending,
+    error: saveError,
+  } = useMutation({
     mutationFn: async () => {
+      setNameError(null);
+      setContentError(null);
       setShortcutError(null);
+
+      let valid = true;
+      if (!isNew && !editableName.trim()) {
+        setNameError("Name must contain at least 1 character.");
+        valid = false;
+      }
+      if (!kontekst.trim()) {
+        setContentError("Content must contain at least 1 character.");
+        valid = false;
+      }
+      if (!isValidShortcut(shortcut)) {
+        setShortcutError(SHORTCUT_VALIDATION_ERROR);
+        valid = false;
+      }
+      if (!valid) throw new Error("Validation failed");
+
       if (!isNew && editableName !== name) {
         const res = await fetch("/api/kontekst", {
           method: "PATCH",
@@ -74,6 +100,7 @@ function KontekstEditPage() {
         });
         if (!res.ok) throw new Error("Rename failed");
       }
+
       const res = await fetch("/api/kontekst", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,11 +111,13 @@ function KontekstEditPage() {
           overwrite: true,
         }),
       });
-      if (res.status === 409) {
-        const body = await res.json();
-        throw new Error(body.message);
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.message ?? `Request failed: ${res.status}`);
       }
     },
+
     onSuccess: () => navigate({ to: "/" }),
     onError: (error) => {
       if (error.message.includes("already assigned")) {
@@ -112,7 +141,7 @@ function KontekstEditPage() {
     <Card className="max-w-lg mx-auto mt-8">
       <CardHeader>
         <CardTitle>
-          {isNew ? "Create" : "Edit"} {isNew ? name : editableName}
+          {isNew ? "Create" : "Edit"} {name}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -122,8 +151,14 @@ function KontekstEditPage() {
             <Input
               id="name"
               value={editableName}
-              onChange={(e) => setEditableName(e.target.value)}
+              onChange={(e) => {
+                setEditableName(e.target.value);
+                setNameError(null);
+              }}
             />
+            {nameError && (
+              <p className="text-sm text-destructive">{nameError}</p>
+            )}
           </div>
         )}
         <div className="flex flex-col gap-2">
@@ -131,25 +166,38 @@ function KontekstEditPage() {
           <Textarea
             id="kontekst"
             value={kontekst}
-            onChange={(e) => setKontekst(e.target.value)}
+            onChange={(e) => {
+              setKontekst(e.target.value);
+              setContentError(null);
+            }}
           />
+          {contentError && (
+            <p className="text-sm text-destructive">{contentError}</p>
+          )}
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="shortcut">Shortcut</Label>
-          <Input
-            id="shortcut"
+          <ShortcutCaptureInput
             value={shortcut}
-            onChange={(e) => {
-              setShortcut(e.target.value);
+            onChange={(v) => {
+              setShortcut(v);
               setShortcutError(null);
             }}
-            placeholder="e.g. cmd+1"
+            onError={setShortcutError}
           />
-          {shortcutError && (
+          {shortcutError ? (
             <p className="text-sm text-destructive">{shortcutError}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">{SHORTCUT_HINT}</p>
           )}
         </div>
       </CardContent>
+      {/* nameError and contentError are displayed separately */}
+      {saveError && !shortcutError && !nameError && !contentError && (
+        <p className="px-6 pb-2 text-sm text-destructive">
+          {saveError.message}
+        </p>
+      )}
       <CardFooter className="gap-2 justify-end">
         {!isNew && (
           <div ref={deleteRef} className="mr-auto">
@@ -174,7 +222,7 @@ function KontekstEditPage() {
         <Button variant="outline" onClick={() => navigate({ to: "/" })}>
           Cancel
         </Button>
-        <Button onClick={() => save()} disabled={isPending}>
+        <Button onClick={() => saveKontekst()} disabled={isPending}>
           {isNew ? "Create" : "Update"}
         </Button>
       </CardFooter>
