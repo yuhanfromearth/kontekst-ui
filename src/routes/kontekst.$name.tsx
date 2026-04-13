@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
   Card,
@@ -12,6 +12,7 @@ import { Label } from "#/components/ui/label";
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { Button } from "#/components/ui/button";
+import { Checkbox } from "#/components/ui/checkbox";
 import { ShortcutCaptureInput } from "#/components/ShortcutCaptureInput";
 import {
   isValidShortcut,
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/kontekst/$name")({
 function KontekstEditPage() {
   const { name } = Route.useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError } = useQuery<KontekstDto>({
     queryKey: ["kontekst", name],
@@ -36,9 +38,15 @@ function KontekstEditPage() {
       ),
   });
 
+  const { data: defaultKontekst } = useQuery<{ name: string }>({
+    queryKey: ["konteksts", "default"],
+    queryFn: () => fetch("/api/konteksts/default").then((res) => res.json()),
+  });
+
   const [editableName, setEditableName] = useState(name);
   const [kontekst, setKontekst] = useState("");
   const [shortcut, setShortcut] = useState("");
+  const [isDefault, setIsDefault] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
   const [contentError, setContentError] = useState<string | null>(null);
   const [shortcutError, setShortcutError] = useState<string | null>(null);
@@ -74,6 +82,12 @@ function KontekstEditPage() {
       if (data.kontekst === undefined) setEditableName("");
     }
   }, [data]);
+
+  useEffect(() => {
+    if (defaultKontekst) {
+      setIsDefault(defaultKontekst.name === name);
+    }
+  }, [defaultKontekst, name]);
 
   const isNew = data?.kontekst === undefined;
 
@@ -126,9 +140,27 @@ function KontekstEditPage() {
         const body = await res.json().catch(() => null);
         throw new Error(body?.message ?? `Request failed: ${res.status}`);
       }
+
+      if (isDefault) {
+        const defaultRes = await fetch("/api/konteksts/default", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: editableName }),
+        });
+        if (!defaultRes.ok) {
+          const body = await defaultRes.json().catch(() => null);
+          throw new Error(body?.message ?? "Failed to set as default");
+        }
+      }
     },
 
-    onSuccess: () => navigate({ to: "/" }),
+    onSuccess: () => {
+      // Tell the query cache the kontekst list is stale so the home page
+      // immediately refetches it. Without this, the cached (old) list would
+      // be used after setting a new default and the wrong kontekst would appear selected.
+      queryClient.invalidateQueries({ queryKey: ["konteksts"] });
+      navigate({ to: "/" });
+    },
     onError: (error) => {
       if (error.message.includes("already assigned")) {
         setShortcutError(error.message);
@@ -203,6 +235,16 @@ function KontekstEditPage() {
             <p className="text-sm text-muted-foreground">{SHORTCUT_HINT}</p>
           )}
         </div>
+        {!isNew && (
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="isDefault"
+              checked={isDefault}
+              onCheckedChange={(checked) => setIsDefault(checked === true)}
+            />
+            <Label htmlFor="isDefault">Set as default</Label>
+          </div>
+        )}
       </CardContent>
       {/* nameError and contentError are displayed separately */}
       {saveError && !shortcutError && !nameError && !contentError && (

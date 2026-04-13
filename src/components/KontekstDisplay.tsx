@@ -56,11 +56,15 @@ export default function KontekstDisplay({
     queryFn: fetchKonteksts,
   });
 
+  // The backend always returns the default kontekst first. By tracking only
+  // the first item as a dependency, this effect re-runs whenever the default
+  // changes (e.g. after returning from the edit page) so the selection stays in sync, not just on initial load.
+  const firstKontekst = kontekstList[0];
   useEffect(() => {
-    if (selected === undefined && kontekstList.length > 0) {
-      onSelect(kontekstList[0]);
+    if (firstKontekst !== undefined) {
+      onSelect(firstKontekst);
     }
-  }, [kontekstList, selected, onSelect]);
+  }, [firstKontekst]);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
