@@ -38,10 +38,11 @@ function KontekstEditPage() {
       ),
   });
 
-  const { data: defaultKontekst } = useQuery<{ name: string }>({
-    queryKey: ["konteksts", "default"],
-    queryFn: () => fetch("/api/konteksts/default").then((res) => res.json()),
+  const { data: kontekstList = [] } = useQuery<string[]>({
+    queryKey: ["konteksts"],
+    queryFn: () => fetch("/api/konteksts").then((res) => res.json()),
   });
+  const savedDefault = kontekstList[0];
 
   const [editableName, setEditableName] = useState(name);
   const [kontekst, setKontekst] = useState("");
@@ -84,10 +85,10 @@ function KontekstEditPage() {
   }, [data]);
 
   useEffect(() => {
-    if (defaultKontekst) {
-      setIsDefault(defaultKontekst.name === name);
+    if (savedDefault !== undefined) {
+      setIsDefault(savedDefault === name);
     }
-  }, [defaultKontekst, name]);
+  }, [savedDefault, name]);
 
   const isNew = data?.kontekst === undefined;
 
@@ -235,7 +236,7 @@ function KontekstEditPage() {
             <p className="text-sm text-muted-foreground">{SHORTCUT_HINT}</p>
           )}
         </div>
-        {!isNew && (
+        {!isNew && savedDefault !== name && (
           <div className="flex items-center gap-2">
             <Checkbox
               id="isDefault"
