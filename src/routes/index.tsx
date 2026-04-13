@@ -1,10 +1,12 @@
 import KontekstDisplay from "#/components/KontekstDisplay";
 import ConversationHistory from "#/components/ConversationHistory";
+import ModelSelector from "#/components/ModelSelector";
 import { Button } from "#/components/ui/button";
 import { Kbd } from "#/components/ui/kbd";
 import { Spinner } from "#/components/ui/spinner";
 import { Textarea } from "#/components/ui/textarea";
 import type { Message } from "#/types/message";
+import type { ModelDto } from "#/types/model";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -17,7 +19,21 @@ function App() {
   const [selectedKontekst, setSelectedKontekst] = useState<
     string | undefined
   >();
+  const [selectedModel, setSelectedModel] = useState("");
+  const [selectedModelName, setSelectedModelName] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const { data: defaultModel } = useQuery<ModelDto>({
+    queryKey: ["models", "default"],
+    queryFn: () => fetch("/api/models/default").then((res) => res.json()),
+  });
+
+  useEffect(() => {
+    if (defaultModel && !selectedModel) {
+      setSelectedModel(defaultModel.id);
+      setSelectedModelName(defaultModel.name);
+    }
+  }, [defaultModel, selectedModel]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -39,7 +55,11 @@ function App() {
   }, []);
 
   const { mutate, isPending } = useMutation({
-    mutationFn: (payload: { messages: Message[]; kontekstName?: string }) =>
+    mutationFn: (payload: {
+      messages: Message[];
+      kontekstName?: string;
+      model?: string;
+    }) =>
       fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,13 +88,25 @@ function App() {
     ];
     setMessages(updatedMessages);
     setInput("");
-    mutate({ messages: updatedMessages, kontekstName: selectedKontekst });
+    mutate({
+      messages: updatedMessages,
+      kontekstName: selectedKontekst,
+      model: selectedModel || undefined,
+    });
   };
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden px-1">
       <h2 className="font-bold text-2xl mb-8 ml-2">kontekst.</h2>
       <form onSubmit={handleSubmit}>
+        <ModelSelector
+          selectedModel={selectedModel}
+          selectedModelName={selectedModelName}
+          onSelect={(id, name) => {
+            setSelectedModel(id);
+            setSelectedModelName(name);
+          }}
+        />
         <Textarea
           ref={textareaRef}
           placeholder="How can I help you? [/]"
@@ -92,6 +124,7 @@ function App() {
               mutate({
                 messages: updatedMessages,
                 kontekstName: selectedKontekst,
+                model: selectedModel || undefined,
               });
             }
           }}

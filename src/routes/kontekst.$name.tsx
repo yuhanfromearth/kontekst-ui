@@ -62,6 +62,7 @@ function KontekstEditPage() {
     if (data) {
       setKontekst(data.kontekst ?? "");
       setShortcut(data.shortcut ?? "");
+      if (data.kontekst === undefined) setEditableName("");
     }
   }, [data]);
 
@@ -78,7 +79,7 @@ function KontekstEditPage() {
       setShortcutError(null);
 
       let valid = true;
-      if (!isNew && !editableName.trim()) {
+      if (!editableName.trim()) {
         setNameError("Name must contain at least 1 character.");
         valid = false;
       }
@@ -105,7 +106,7 @@ function KontekstEditPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: isNew ? name : editableName,
+          name: editableName,
           content: kontekst,
           shortcut,
           overwrite: true,
@@ -141,26 +142,24 @@ function KontekstEditPage() {
     <Card className="max-w-lg mx-auto mt-8">
       <CardHeader>
         <CardTitle>
-          {isNew ? "Create" : "Edit"} <span className="font-mono">{name}</span>
+          {isNew ? "Create new Kontekst" : <>Edit <span className="font-mono">{name}</span></>}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {!isNew && (
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={editableName}
-              onChange={(e) => {
-                setEditableName(e.target.value);
-                setNameError(null);
-              }}
-            />
-            {nameError && (
-              <p className="text-sm text-destructive">{nameError}</p>
-            )}
-          </div>
-        )}
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="name">Name</Label>
+          <Input
+            id="name"
+            value={editableName}
+            onChange={(e) => {
+              setEditableName(e.target.value);
+              setNameError(null);
+            }}
+          />
+          {nameError && (
+            <p className="text-sm text-destructive">{nameError}</p>
+          )}
+        </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="kontekst">Context</Label>
           <Textarea
