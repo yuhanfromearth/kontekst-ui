@@ -24,6 +24,7 @@ function App() {
   const [selectedModelName, setSelectedModelName] = useState("");
   const [modelContextLength, setModelContextLength] = useState(0);
   const [tokenUsage, setTokenUsage] = useState<TokenUsage | undefined>();
+  const [conversationId, setConversationId] = useState<string | undefined>();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: defaultModel } = useQuery<ModelDto>({
@@ -62,14 +63,20 @@ function App() {
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (payload: {
-      messages: Message[];
+      userMessage: string;
+      conversationId?: string;
       kontekstName?: string;
       model?: string;
     }) => {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          conversationId: payload.conversationId,
+          kontekstName: payload.kontekstName,
+          message: payload.userMessage,
+          model: payload.model,
+        }),
       });
 
       if (response.status === 413) {
@@ -86,16 +93,17 @@ function App() {
     },
     onSuccess: (response) => {
       setChatError(undefined);
+      setConversationId(response.conversationId);
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: response.content },
       ]);
       setTokenUsage(response.usage);
     },
-    onError: (error: Error, payload) => {
+    onError: (error: Error) => {
       setChatError(error.message);
       // roll back the optimistic user message
-      setMessages(payload.messages.slice(0, -1));
+      setMessages((prev) => prev.slice(0, -1));
     },
   });
 
@@ -104,21 +112,22 @@ function App() {
     queryFn: () => fetch("/api/shortcuts").then((res) => res.json()),
   });
 
-  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const submit = () => {
     if (!input) return;
-    const updatedMessages: Message[] = [
-      ...messages,
-      { role: "user", content: input },
-    ];
-    setMessages(updatedMessages);
+    const userMessage = input;
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setInput("");
     mutate({
-      messages: updatedMessages,
+      userMessage,
+      conversationId,
       kontekstName: selectedKontekst,
       model: selectedModel || undefined,
     });
+  };
+
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    submit();
   };
 
   return (
@@ -155,17 +164,7 @@ function App() {
           onKeyDown={(e) => {
             if (e.metaKey && e.key === "Enter" && input.trim() !== "") {
               e.preventDefault();
-              const updatedMessages: Message[] = [
-                ...messages,
-                { role: "user", content: input },
-              ];
-              setMessages(updatedMessages);
-              setInput("");
-              mutate({
-                messages: updatedMessages,
-                kontekstName: selectedKontekst,
-                model: selectedModel || undefined,
-              });
+              submit();
             }
           }}
         />

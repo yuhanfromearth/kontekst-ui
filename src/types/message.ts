@@ -10,6 +10,7 @@ export interface TokenUsage {
 }
 
 export interface ChatResponseDto {
+  conversationId: string;
   content: string;
   usage?: TokenUsage;
 }
