@@ -1,5 +1,8 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 export default function MarkdownRenderer({
   markdownString,
@@ -9,7 +12,8 @@ export default function MarkdownRenderer({
   return (
     <div className="prose max-w-none text-justify w-full [&_p]:leading-6 [&_p]:my-4">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
         components={{
           code({ node, className, children, ...props }) {
             const isInline = !String(children).includes("\n");
