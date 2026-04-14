@@ -5,26 +5,34 @@ import { Button } from "#/components/ui/button";
 import { Kbd } from "#/components/ui/kbd";
 import { Spinner } from "#/components/ui/spinner";
 import { Textarea } from "#/components/ui/textarea";
-import type { ChatResponseDto, Message, TokenUsage } from "#/types/message";
+import type { ChatResponseDto } from "#/types/message";
 import type { ModelDto } from "#/types/model";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { formatTokens } from "#/lib/tokens";
 import { useEffect, useRef, useState } from "react";
+import { useConversation } from "#/components/ConversationContext";
 
 export const Route = createFileRoute("/")({ component: App });
 
 function App() {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [selectedKontekst, setSelectedKontekst] = useState<
-    string | undefined
-  >();
-  const [selectedModel, setSelectedModel] = useState("");
-  const [selectedModelDto, setSelectedModelDto] = useState<ModelDto | undefined>();
-  const [modelContextLength, setModelContextLength] = useState(0);
-  const [tokenUsage, setTokenUsage] = useState<TokenUsage | undefined>();
-  const [conversationId, setConversationId] = useState<string | undefined>();
+  const {
+    messages,
+    setMessages,
+    conversationId,
+    setConversationId,
+    tokenUsage,
+    setTokenUsage,
+    selectedKontekst,
+    setSelectedKontekst,
+    selectedModel,
+    setSelectedModel,
+    selectedModelDto,
+    setSelectedModelDto,
+    modelContextLength,
+    setModelContextLength,
+  } = useConversation();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: defaultModel } = useQuery<ModelDto>({
