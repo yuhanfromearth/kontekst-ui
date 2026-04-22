@@ -8,7 +8,7 @@ import { Textarea } from "#/components/ui/textarea";
 import type { ChatResponseDto } from "#/types/message";
 import type { ModelDto } from "#/types/model";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { formatTokens } from "#/lib/tokens";
 import { useEffect, useRef, useState } from "react";
 import { useConversation } from "#/components/ConversationContext";
@@ -138,9 +138,21 @@ function App() {
     submit();
   };
 
+  const navigate = useNavigate();
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden px-1">
-      <h2 className="font-bold text-2xl mb-8 ml-2">kontekst.</h2>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="font-bold text-2xl ml-2">kontekst.</h2>
+        <button
+          type="button"
+          onClick={() => navigate({ to: "/shortcuts" })}
+          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          title="Keyboard shortcuts"
+        >
+          ?
+        </button>
+      </div>
       <form onSubmit={handleSubmit}>
         <div className="flex items-center justify-between mb-2">
           <ModelSelector

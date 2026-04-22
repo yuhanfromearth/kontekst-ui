@@ -170,7 +170,7 @@ export default function KontekstDisplay({
           onMouseEnter={() => setHoveredKontekst(kontekst)}
           onMouseLeave={() => setHoveredKontekst(null)}
           variant={selected === kontekst ? "default" : "outline"}
-          className={`gap-1 font-mono transition-opacity ${isCmdHeld && hoveredKontekst === kontekst ? "cursor-alias opacity-70 ring-2 ring-ring/50" : "cursor-pointer"}`}
+          className={`gap-1 font-mono ${isCmdHeld && hoveredKontekst === kontekst ? "cursor-alias opacity-70 ring-2 ring-ring/50" : "cursor-pointer"} ${selected === kontekst ? "transition-opacity" : "transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-95"}`}
         >
           {kontekst}
           {shortcuts?.[kontekst] && selected !== kontekst && (
@@ -181,7 +181,7 @@ export default function KontekstDisplay({
       <Badge
         title="Create new Kontekst"
         variant="outline"
-        className="cursor-pointer font-mono"
+        className="cursor-pointer font-mono hover:bg-accent transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-110 active:scale-95"
         onClick={() =>
           navigate({ to: "/kontekst/$name", params: { name: "new" } })
         }
