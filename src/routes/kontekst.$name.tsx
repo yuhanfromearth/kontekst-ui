@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -189,106 +190,120 @@ function KontekstEditPage() {
   if (isError) return <p>Something went wrong.</p>;
 
   return (
-    <Card className="max-w-lg mx-auto mt-8">
-      <CardHeader>
-        <CardTitle>
-          {isNew ? (
-            "Create new Kontekst"
-          ) : (
-            <>
-              Edit <span className="font-mono">{name}</span>
-            </>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            value={editableName}
-            onChange={(e) => {
-              setEditableName(e.target.value);
-              setNameError(null);
-            }}
-          />
-          {nameError && <p className="text-sm text-destructive">{nameError}</p>}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="kontekst">Context</Label>
-          <Textarea
-            id="kontekst"
-            value={kontekst}
-            onChange={(e) => {
-              setKontekst(e.target.value);
-              setContentError(null);
-            }}
-          />
-          {contentError && (
-            <p className="text-sm text-destructive">{contentError}</p>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="shortcut">Shortcut</Label>
-          <ShortcutCaptureInput
-            value={shortcut}
-            onChange={(v) => {
-              setShortcut(v);
-              setShortcutError(null);
-            }}
-            onError={setShortcutError}
-          />
-          {shortcutError ? (
-            <p className="text-sm text-destructive">{shortcutError}</p>
-          ) : (
-            <p className="text-sm text-muted-foreground">{SHORTCUT_HINT}</p>
-          )}
-        </div>
-        {!isNew && savedDefault !== name && (
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="isDefault"
-              checked={isDefault}
-              onCheckedChange={(checked) => setIsDefault(checked === true)}
-            />
-            <Label htmlFor="isDefault">Set as default</Label>
-          </div>
-        )}
-      </CardContent>
-      {/* nameError and contentError are displayed separately */}
-      {saveError && !shortcutError && !nameError && !contentError && (
-        <p className="px-6 pb-2 text-sm text-destructive">
-          {saveError.message}
-        </p>
-      )}
-      <CardFooter className="gap-2 justify-end">
-        {!isNew && (
-          <div ref={deleteRef} className="mr-auto">
-            {confirmDelete ? (
-              <Button
-                variant="destructive"
-                onClick={() => deleteKontekst()}
-                disabled={isDeleting}
-              >
-                Confirm delete
-              </Button>
+    <>
+      <div className="max-w-lg mx-auto w-full">
+        <button
+          type="button"
+          onClick={() => navigate({ to: "/" })}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4 -ml-0.5"
+        >
+          <ArrowLeft className="size-4" />
+          Back
+        </button>
+      </div>
+      <Card className="max-w-lg mx-auto">
+        <CardHeader>
+          <CardTitle>
+            {isNew ? (
+              "Create new Kontekst"
             ) : (
-              <Button
-                variant="destructive"
-                onClick={() => setConfirmDelete(true)}
-              >
-                Delete
-              </Button>
+              <>
+                Edit <span className="font-mono">{name}</span>
+              </>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              value={editableName}
+              onChange={(e) => {
+                setEditableName(e.target.value);
+                setNameError(null);
+              }}
+            />
+            {nameError && (
+              <p className="text-sm text-destructive">{nameError}</p>
             )}
           </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="kontekst">Context</Label>
+            <Textarea
+              id="kontekst"
+              value={kontekst}
+              onChange={(e) => {
+                setKontekst(e.target.value);
+                setContentError(null);
+              }}
+            />
+            {contentError && (
+              <p className="text-sm text-destructive">{contentError}</p>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="shortcut">Shortcut</Label>
+            <ShortcutCaptureInput
+              value={shortcut}
+              onChange={(v) => {
+                setShortcut(v);
+                setShortcutError(null);
+              }}
+              onError={setShortcutError}
+            />
+            {shortcutError ? (
+              <p className="text-sm text-destructive">{shortcutError}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">{SHORTCUT_HINT}</p>
+            )}
+          </div>
+          {!isNew && savedDefault !== name && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="isDefault"
+                checked={isDefault}
+                onCheckedChange={(checked) => setIsDefault(checked === true)}
+              />
+              <Label htmlFor="isDefault">Set as default</Label>
+            </div>
+          )}
+        </CardContent>
+        {/* nameError and contentError are displayed separately */}
+        {saveError && !shortcutError && !nameError && !contentError && (
+          <p className="px-6 pb-2 text-sm text-destructive">
+            {saveError.message}
+          </p>
         )}
-        <Button variant="outline" onClick={() => navigate({ to: "/" })}>
-          Cancel
-        </Button>
-        <Button onClick={() => saveKontekst()} disabled={isPending}>
-          {isNew ? "Create" : "Update"}
-        </Button>
-      </CardFooter>
-    </Card>
+        <CardFooter className="gap-2 justify-end">
+          {!isNew && (
+            <div ref={deleteRef} className="mr-auto">
+              {confirmDelete ? (
+                <Button
+                  variant="destructive"
+                  onClick={() => deleteKontekst()}
+                  disabled={isDeleting}
+                >
+                  Confirm delete
+                </Button>
+              ) : (
+                <Button
+                  variant="destructive"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  Delete
+                </Button>
+              )}
+            </div>
+          )}
+          <Button variant="outline" onClick={() => navigate({ to: "/" })}>
+            Cancel
+          </Button>
+          <Button onClick={() => saveKontekst()} disabled={isPending}>
+            {isNew ? "Create" : "Update"}
+          </Button>
+        </CardFooter>
+      </Card>
+    </>
   );
 }

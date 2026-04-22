@@ -40,7 +40,7 @@ export default function ModelSelector({
     queryKey: ["models", debouncedSearch],
     queryFn: () =>
       fetch(
-        `/api/models?search=${encodeURIComponent(debouncedSearch)}&limit=10`,
+        `/api/models?search=${encodeURIComponent(debouncedSearch)}&limit=20`,
       ).then((res) => res.json()),
     enabled: open,
   });
@@ -64,9 +64,11 @@ export default function ModelSelector({
   const hasSelectedInResults = models?.some((m) => m.id === selectedModel);
   const displayModels: ModelDto[] = [
     ...(selectedModelDto && !hasSelectedInResults ? [selectedModelDto] : []),
-    ...(models?.slice().sort((a, b) =>
-      a.id === selectedModel ? -1 : b.id === selectedModel ? 1 : 0,
-    ) ?? []),
+    ...(models
+      ?.slice()
+      .sort((a, b) =>
+        a.id === selectedModel ? -1 : b.id === selectedModel ? 1 : 0,
+      ) ?? []),
   ];
 
   const label = selectedModelDto?.name || selectedModel || "select model";
