@@ -169,6 +169,14 @@ function KontekstEditPage() {
     },
   });
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.metaKey && e.key === "Enter") saveKontekst();
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [saveKontekst]);
+
   const { mutate: deleteKontekst, isPending: isDeleting } = useMutation({
     mutationFn: () =>
       fetch(`/api/kontekst?name=${encodeURIComponent(name)}`, {

@@ -121,6 +121,17 @@ function ShortcutsPage() {
               </>
             }
           />
+          <ShortcutRow
+            title="Save kontekst"
+            description="Create or update a kontekst from the editor."
+            keys={
+              <>
+                <Kbd>⌘</Kbd>
+                <span className="text-muted-foreground text-sm">+</span>
+                <Kbd>Enter</Kbd>
+              </>
+            }
+          />
         </Section>
 
         <Section title="Navigation">
