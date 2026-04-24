@@ -28,12 +28,7 @@ function ShortcutDisplay({ shortcut }: { shortcut: string }) {
   const keys = shortcut.split("+");
   return (
     <>
-      {keys.map((key, i) => (
-        <span key={i}>
-          {i > 0 && "+"}
-          <Kbd>{key}</Kbd>
-        </span>
-      ))}
+      <Kbd className="w-fit h-fit">{keys.join(" + ")}</Kbd>
     </>
   );
 }
