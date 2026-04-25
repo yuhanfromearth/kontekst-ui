@@ -15,10 +15,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { formatTokens } from "#/lib/tokens";
 import { useEffect, useRef, useState } from "react";
 import { useConversation } from "#/components/ConversationContext";
+import { useIsMac } from "#/lib/platform";
 
 export const Route = createFileRoute("/")({ component: App });
 
 function App() {
+  const isMac = useIsMac();
   const [input, setInput] = useState("");
   const {
     messages,
@@ -215,7 +217,8 @@ function App() {
             setChatError(undefined);
           }}
           onKeyDown={(e) => {
-            if (e.metaKey && e.key === "Enter" && input.trim() !== "") {
+            const mod = isMac ? e.metaKey : e.ctrlKey;
+            if (mod && e.key === "Enter" && input.trim() !== "") {
               e.preventDefault();
               submit();
             }
@@ -232,7 +235,7 @@ function App() {
               <Spinner />
             ) : (
               <>
-                Send <Kbd>⌘ + Enter</Kbd>
+                Send <Kbd>{isMac ? "⌘" : "ctrl"} + Enter</Kbd>
               </>
             )}
           </Button>

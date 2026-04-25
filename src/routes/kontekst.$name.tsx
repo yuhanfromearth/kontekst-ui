@@ -17,9 +17,10 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { ShortcutCaptureInput } from "#/components/ShortcutCaptureInput";
 import {
   isValidShortcut,
-  SHORTCUT_HINT,
-  SHORTCUT_VALIDATION_ERROR,
+  shortcutHint,
+  shortcutValidationError,
 } from "#/lib/shortcut";
+import { useIsMac } from "#/lib/platform";
 import type { KontekstDto } from "#/types/kontekst";
 
 export const Route = createFileRoute("/kontekst/$name")({
@@ -30,6 +31,7 @@ function KontekstEditPage() {
   const { name } = Route.useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const isMac = useIsMac();
 
   const { data, isLoading, isError } = useQuery<KontekstDto>({
     queryKey: ["kontekst", name],
@@ -113,7 +115,7 @@ function KontekstEditPage() {
         valid = false;
       }
       if (!isValidShortcut(shortcut)) {
-        setShortcutError(SHORTCUT_VALIDATION_ERROR);
+        setShortcutError(shortcutValidationError());
         valid = false;
       }
       if (!valid) throw new Error("Validation failed");
@@ -172,11 +174,12 @@ function KontekstEditPage() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.metaKey && e.key === "Enter") saveKontekst();
+      const mod = isMac ? e.metaKey : e.ctrlKey;
+      if (mod && e.key === "Enter") saveKontekst();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [saveKontekst]);
+  }, [saveKontekst, isMac]);
 
   const { mutate: deleteKontekst, isPending: isDeleting } = useMutation({
     mutationFn: () =>
@@ -255,7 +258,7 @@ function KontekstEditPage() {
             {shortcutError ? (
               <p className="text-sm text-destructive">{shortcutError}</p>
             ) : (
-              <p className="text-sm text-muted-foreground">{SHORTCUT_HINT}</p>
+              <p className="text-sm text-muted-foreground">{shortcutHint()}</p>
             )}
           </div>
           {!isNew && savedDefault !== name && (

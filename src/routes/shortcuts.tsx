@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Kbd } from "#/components/ui/kbd";
 import { ArrowLeft } from "lucide-react";
 import { useEffect } from "react";
+import { useIsMac } from "#/lib/platform";
 
 export const Route = createFileRoute("/shortcuts")({
   component: ShortcutsPage,
@@ -45,6 +46,8 @@ function Section({ title, children }: SectionProps) {
 
 function ShortcutsPage() {
   const navigate = useNavigate();
+  const isMac = useIsMac();
+  const modGlyph = isMac ? "⌘" : "ctrl";
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -86,7 +89,7 @@ function ShortcutsPage() {
             description="Submit your prompt without reaching for the mouse."
             keys={
               <>
-                <Kbd>⌘</Kbd>
+                <Kbd>{modGlyph}</Kbd>
                 <span className="text-muted-foreground text-sm">+</span>
                 <Kbd>Enter</Kbd>
               </>
@@ -97,7 +100,7 @@ function ShortcutsPage() {
         <Section title="Konteksts">
           <ShortcutRow
             title="Switch kontekst"
-            description="Activate a kontekst by its assigned shortcut key. Set these in the editor. Supports letters, numbers, combos (a+b), or Cmd+key (⌘+a)."
+            description={`Activate a kontekst by its assigned shortcut key. Set these in the editor. Supports letters, numbers, combos (a+b), or ${isMac ? "Cmd" : "Ctrl"}+key (${modGlyph}+a).`}
             keys={
               <>
                 <Kbd>a</Kbd>
@@ -106,7 +109,7 @@ function ShortcutsPage() {
                 <span className="text-muted-foreground text-sm">+</span>
                 <Kbd>b</Kbd>
                 <span className="text-muted-foreground text-sm">/</span>
-                <Kbd>⌘</Kbd>
+                <Kbd>{modGlyph}</Kbd>
                 <span className="text-muted-foreground text-sm">+</span>
                 <Kbd>a</Kbd>
               </>
@@ -114,10 +117,10 @@ function ShortcutsPage() {
           />
           <ShortcutRow
             title="Edit kontekst"
-            description="Hold ⌘ and click any kontekst badge to open its editor."
+            description={`Hold ${modGlyph} and click any kontekst badge to open its editor.`}
             keys={
               <>
-                <Kbd>⌘</Kbd>
+                <Kbd>{modGlyph}</Kbd>
                 <span className="text-muted-foreground text-sm">+</span>
                 <Kbd>click</Kbd>
               </>
@@ -128,7 +131,7 @@ function ShortcutsPage() {
             description="Create or update a kontekst from the editor."
             keys={
               <>
-                <Kbd>⌘</Kbd>
+                <Kbd>{modGlyph}</Kbd>
                 <span className="text-muted-foreground text-sm">+</span>
                 <Kbd>Enter</Kbd>
               </>

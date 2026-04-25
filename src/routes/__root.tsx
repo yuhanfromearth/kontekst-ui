@@ -3,10 +3,9 @@ import {
   Scripts,
   createRootRouteWithContext,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { TanStackDevtools } from "@tanstack/react-devtools";
-
-import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
+// import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+// import { TanStackDevtools } from "@tanstack/react-devtools";
+// import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 import { ConversationProvider } from "../components/ConversationContext";
 
 import appCss from "../styles.css?url";
@@ -61,7 +60,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <main className="h-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
           <ConversationProvider>{children}</ConversationProvider>
         </main>
-        <TanStackDevtools
+        {/*<TanStackDevtools
           config={{
             position: "bottom-right",
           }}
@@ -72,7 +71,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             },
             TanStackQueryDevtools,
           ]}
-        />
+        />*/}
         <Scripts />
       </body>
     </html>
